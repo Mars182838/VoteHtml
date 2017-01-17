@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>专业评审打分</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
+    <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+    <link href="css/detial.css" rel="stylesheet">
+    <script>
+        $(document).ready(function() {
+
+            initContian();
+
+            var count = -1;
+            $(".btn").click(function() {
+                count = document.getElementById("scount").value;
+                console.log(count);
+                if(count > 100){
+                    alert("请输入0-100数字");
+                }
+                else if(!count){
+                    alert("请输入0-100数字");
+                }
+                else if (count < 0){
+                    alert("请输入0-100数字");
+                }
+                else{
+                    $(".float").show();
+                    $(".float-name").html(count+"分");
+                }
+            });
+
+            $(".close").click(function() {
+                $(".float").hide();
+            });
+
+            $(".sureBtn").click(function() {
+                var acount  = document.getElementById("scount").value;
+                var pw_id = "01";
+
+                jQuery.post('http://112.74.51.149:8002/yyhsy/zypf/commitPoint',{pwid:pw_id, userid:GetQueryString("userid"), count:acount},function(data,status){
+                    console.log(status);
+                    if(status == "success"){
+                        $(".float").hide();
+                        location.href = "index_01.html";
+                    }
+                });
+            });
+        });
+
+        function initContian(listdata) {
+            var chap = "《"+decodeURI(GetQueryString("csqm"))+"》";
+            var bigImg = "images/bigImage/"+GetQueryString("userid")+".jpg";
+            var list = '<div class="icon"><img src="'+bigImg+'"></div><div class="tlt-box"><div class="count"><font style="font-size: 40px; color: red;"><b>'+GetQueryString("ycsx")+'</b></font>号  '+decodeURI(GetQueryString("xsxm"))+'</div><div class="chapter">'+chap+'</div></div>';
+            $(".box").append($(list));
+        }
+
+        function GetQueryString(name)
+        {
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(decodeURI(r[2])); return null;
+        }
+    </script>
+
+</head>
+<body>
+<div class="contianer">
+    <div class="box"></div>
+    <div class="mark-box">
+        <div class="mark-input">
+            <input type="text" placeholder="请打分" id="scount">
+            <div class="value">分</div>
+        </div>
+        <div class="mark">请您给该选手打分,满分100分</div>
+    </div>
+    <button class="btn">打分</button>
+</div>
+
+<div class="float">
+    <div class="float-box">
+        <div class="close"></div>
+        <div class="tlt">您给该选手打分为</div>
+        <div class="float-name"></div>
+        <div class="sureBtn">确定</div>
+    </div>
+</div>
+</body>
+</html>

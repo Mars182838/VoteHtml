@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>大众评审投票</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="email=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
+    <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+    <link href="css/customSelected.css" rel="stylesheet">
+
+    <script>
+        $(document).ready(function() {
+            var namelist = new Array;
+            //选手选票
+            initData();
+        });
+
+        function initData() {
+            var selectedCount = 0;
+            var array = new Array;
+            //获取选手个人信息
+            $.ajax({
+                url:'http://112.74.51.149:8002/yyhsy/zypf/account',
+                type:'GET', //GET
+                timeout:1000,    //超时时间
+                dataType:'json',    //返回的数据格式：json/xml/html/script/jsonp/text
+                success:function(data,textStatus,jqXHR){
+                    namelist = data;
+                    initContian(namelist);
+                    $(".check").click(function() {
+                        var id = $(this).attr('data-idx');
+                        if ($.inArray(id, array) < 0) {
+                            if (selectedCount > 5) {
+                                alert("已选择6位选手,请为他们投票吧");
+                                return;
+                            }
+                            $(this).find(".check-img").css("background", "#00B8FF");
+                            $(this).find("#check-image").attr("src", "images/circle-on.png");
+                            $(this).find(".check-span").css("color", "#fff");
+                            $(this).find(".check-span").html("已选投票");
+                            selectedCount = id;
+                            array.push(id);
+                        }
+                        else {
+                            $(this).find(".check-img").css("background", "#fff");
+                            $(this).find("#check-image").attr("src", "images/circle-off.png");
+                            $(this).find(".check-span").css("color", "#00B8FF");
+                            $(this).find(".check-span").html("投他一票");
+                            array.splice($.inArray(id, array), 1);
+                        }
+                        $(".count").html(array.length);
+                        selectedCount = array.length;
+
+                        /*当选择了6位选手的时候变为点击状态*/
+                        if (selectedCount == 6) {
+                            $(".btn").removeClass('btn_disabled');
+                        }
+                        else {
+                            $(".btn").addClass('btn_disabled');
+                        }
+                    });
+                },
+                error:function(xhr,textStatus){
+                    console.log(xhr);
+                    console.log(textStatus);
+                }
+            });
+
+            //提交投票
+            $(".btn").click(function() {
+                if (array.length != 6) {
+                    return;
+                }
+                else{
+                    var arr = new Array;
+                    for (var i in array){
+                        arr.push(namelist[i].userid);
+                    }
+                    var commitStr = arr.join(",");
+                    $.ajax({
+                        url:'http://112.74.51.149:8002/yyhsy/dztp/commitTicket',
+                        type:'POST', //GET
+                        timeout:1000,    //超时时间
+                        data:{userid:commitStr},
+                        success:function(data,textStatus,jqXHR){
+                            if(textStatus == "success"){
+                                alert("谢谢,您已投票成功");
+                            }
+                            console.log(textStatus);
+                        },
+                        error:function(xhr,textStatus){
+                            console.log('错误');
+                            console.log(textStatus);
+                        }
+                    })
+                }
+            });
+        }
+
+        function initContian(listdata) {
+            var header  = '<div class="header"><img src="images/header.png"></div><div class="tips">请选择您心目中的前6位好声音</div>';
+            var box  = '<div class="box"></div>';
+            $(".footer").before($(header));
+            $(".footer").before($(box));
+            listdata.forEach(function(val,i,data){
+                var tltStr = data[i].ycsx + "号   " + data[i].xsxm;
+                var chap = "《"+data[i].csqm+"》";
+                var bigImg = "images/littleImage/"+ data[i].userid +".jpg";
+                var list = '<div class="list"><div class="icon"><img src="'+bigImg+'"></div><div class="check" data-idx="'+i+'"><div class="check-img"><img id="check-image" src="images/circle-off.png"><span class="check-span">投他一票</span></div></div><div class="tlt">'+tltStr+'</div><div class="chapter">'+chap+'</div></div>';
+                $(".box").append($(list));
+            });
+        }
+    </script>
+
+</head>
+<body>
+<div class="contianer">
+    <div class="footer">
+        <div class="footer-box">
+            <span class="selected-person">已选人数:</span><span class="count">0</span>
+            <button class="btn btn_disabled">提交选票</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
